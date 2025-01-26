@@ -7,4 +7,8 @@ crons = [ ]
 
 [[routes]]
 pattern = "ssl.russ.tips"
-custom_domain = true 
+custom_domain = true
+
+[build]
+command = "npm run build"
+output_dir = "dist" 
