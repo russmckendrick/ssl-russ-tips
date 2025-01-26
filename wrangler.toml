@@ -1,0 +1,10 @@
+name = "ssl-checker-worker"
+main = "src/index.js"
+compatibility_date = "2024-01-01"
+
+[triggers]
+crons = [ ]
+
+[[routes]]
+pattern = "ssl.russ.tips"
+custom_domain = true 
