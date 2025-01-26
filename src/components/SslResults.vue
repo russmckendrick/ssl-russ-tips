@@ -13,14 +13,42 @@
         
         <div v-if="results.basicChecks.httpsAvailable" class="details">
           <div class="detail-item">
-            <strong>TLS Version:</strong> {{ results.basicChecks.tlsVersion }}
+            <strong>Connection:</strong>
+            <div class="sub-details">
+              <div>HTTP Version: {{ results.basicChecks.connection.httpVersion }}</div>
+              <div>TLS Version: {{ results.basicChecks.connection.clientTLS.version }}</div>
+              <div>TLS Cipher: {{ results.basicChecks.connection.clientTLS.cipher }}</div>
+            </div>
           </div>
+
           <div class="detail-item">
-            <strong>Cipher:</strong> {{ results.basicChecks.tlsCipher }}
+            <strong>Server Location:</strong>
+            <div class="sub-details">
+              <div>Datacenter: {{ results.basicChecks.serverLocation.datacenter }}</div>
+              <div>Country: {{ results.basicChecks.serverLocation.country }}</div>
+              <div>City: {{ results.basicChecks.serverLocation.city }}</div>
+            </div>
           </div>
+
+          <div class="detail-item">
+            <strong>Security Headers:</strong>
+            <div class="sub-details security-headers">
+              <div v-for="(value, header) in results.basicChecks.security.securityHeaders" 
+                   :key="header"
+                   :class="value !== 'Not Set' ? 'present' : 'missing'"
+              >
+                {{ header }}: {{ value }}
+              </div>
+            </div>
+          </div>
+
           <div class="detail-item">
             <strong>Cloudflare Protected:</strong> {{ results.basicChecks.isCloudflareProtected ? 'Yes' : 'No' }}
           </div>
+        </div>
+
+        <div v-if="results.status === 'warning'" class="warning">
+          {{ results.basicChecks.warning }}
         </div>
 
         <button 

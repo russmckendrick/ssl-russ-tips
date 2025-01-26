@@ -6,31 +6,81 @@ async function basicSslCheck(host) {
       headers: { 'User-Agent': 'SSL Checker (ssl.russ.tips)' }
     });
 
-    // Get SSL certificate info from response
-    const cfSslInfo = {
-      protocol: response.headers.get('cf-ray') ? 'HTTPS' : 'HTTP',
-      tlsVersion: response.headers.get('cf-tls-version'),
-      tlsCipher: response.headers.get('cf-tls-cipher'),
-      isCloudflareProtected: !!response.headers.get('cf-ray')
+    // Get response headers
+    const headers = Object.fromEntries(response.headers);
+    
+    // Extract Cloudflare SSL/TLS info from the connection
+    const cfResponse = await response.cf;
+    
+    const sslInfo = {
+      protocol: 'HTTPS',
+      tlsVersion: cfResponse?.tlsVersion || headers['cf-tls-version'],
+      tlsCipher: cfResponse?.tlsCipher || headers['cf-tls-cipher'],
+      isCloudflareProtected: !!headers['cf-ray'],
+      serverLocation: {
+        datacenter: cfResponse?.colo || 'Unknown',
+        country: cfResponse?.country || 'Unknown',
+        city: cfResponse?.city || 'Unknown'
+      },
+      connection: {
+        httpVersion: cfResponse?.httpProtocol || 'Unknown',
+        clientTLS: {
+          version: cfResponse?.tlsVersion || 'Unknown',
+          cipher: cfResponse?.tlsCipher || 'Unknown'
+        }
+      },
+      security: {
+        isHTTPS: true,
+        hasHSTS: !!headers['strict-transport-security'],
+        securityHeaders: {
+          'X-Content-Type-Options': headers['x-content-type-options'] || 'Not Set',
+          'X-Frame-Options': headers['x-frame-options'] || 'Not Set',
+          'X-XSS-Protection': headers['x-xss-protection'] || 'Not Set',
+          'Content-Security-Policy': headers['content-security-policy'] || 'Not Set',
+          'Referrer-Policy': headers['referrer-policy'] || 'Not Set',
+          'Permissions-Policy': headers['permissions-policy'] || 'Not Set'
+        }
+      }
     };
 
     return {
       status: 'ok',
       basicChecks: {
         httpsAvailable: true,
-        ...cfSslInfo,
+        ...sslInfo,
         responseCode: response.status,
-        headers: Object.fromEntries(response.headers)
+        fullHeaders: headers
       }
     };
   } catch (error) {
-    return {
-      status: 'error',
-      basicChecks: {
-        httpsAvailable: false,
-        error: error.message
-      }
-    };
+    // Try HTTP as fallback to check if the site is available at all
+    try {
+      const httpResponse = await fetch(`http://${host}`, {
+        method: 'HEAD',
+        headers: { 'User-Agent': 'SSL Checker (ssl.russ.tips)' }
+      });
+
+      return {
+        status: 'warning',
+        basicChecks: {
+          httpsAvailable: false,
+          httpAvailable: true,
+          protocol: 'HTTP',
+          responseCode: httpResponse.status,
+          warning: 'Site is available over HTTP but not HTTPS',
+          error: error.message
+        }
+      };
+    } catch (httpError) {
+      return {
+        status: 'error',
+        basicChecks: {
+          httpsAvailable: false,
+          httpAvailable: false,
+          error: `HTTPS Error: ${error.message}, HTTP Error: ${httpError.message}`
+        }
+      };
+    }
   }
 }
 
