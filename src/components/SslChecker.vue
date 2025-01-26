@@ -14,16 +14,12 @@ import SslResults from './SslResults.vue'
 const loading = ref(false)
 const results = ref(null)
 
-const handleUrlCheck = async ({ url, email }) => {
+const handleUrlCheck = async (url) => {
   loading.value = true
   results.value = null
   
   try {
-    const response = await fetch(`/analyze?host=${encodeURIComponent(url)}`, {
-      headers: {
-        'email': email
-      }
-    })
+    const response = await fetch(`/analyze?host=${encodeURIComponent(url)}`)
     const data = await response.json()
     if (response.ok) {
       results.value = data

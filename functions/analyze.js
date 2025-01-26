@@ -11,7 +11,6 @@ export async function onRequest(context) {
 
   const url = new URL(context.request.url);
   const host = url.searchParams.get('host');
-  const email = context.request.headers.get('email');
 
   if (!host) {
     return new Response(JSON.stringify({ error: 'Host parameter is required' }), {
@@ -23,20 +22,10 @@ export async function onRequest(context) {
     });
   }
 
-  if (!email) {
-    return new Response(JSON.stringify({ error: 'Email header is required' }), {
-      status: 400,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-      },
-    });
-  }
-
   try {
     const response = await fetch(`https://api.ssllabs.com/api/v4/analyze?host=${encodeURIComponent(host)}&startNew=on`, {
       headers: {
-        'email': email
+        'email': context.env.SSLLABS_EMAIL
       }
     });
 

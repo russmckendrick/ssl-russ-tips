@@ -9,19 +9,9 @@
           :disabled="loading"
           required
         >
-        <input 
-          type="email" 
-          v-model="email" 
-          placeholder="Your email address"
-          :disabled="loading"
-          required
-        >
         <button type="submit" :disabled="loading">
           {{ loading ? 'Checking...' : 'Check SSL' }}
         </button>
-      </div>
-      <div class="help-text">
-        Email required by SSL Labs API - not stored or used for marketing
       </div>
     </form>
   </div>
@@ -39,11 +29,9 @@ const props = defineProps({
 
 const emit = defineEmits(['check-url'])
 const url = ref('')
-const email = ref(localStorage.getItem('lastEmail') || '')
 
 const handleSubmit = () => {
-  localStorage.setItem('lastEmail', email.value)
-  emit('check-url', { url: url.value, email: email.value })
+  emit('check-url', url.value)
 }
 </script>
 
@@ -76,11 +64,5 @@ button {
 button:disabled {
   background-color: #cccccc;
   cursor: not-allowed;
-}
-
-.help-text {
-  margin-top: 8px;
-  font-size: 0.8em;
-  color: #666;
 }
 </style> 
