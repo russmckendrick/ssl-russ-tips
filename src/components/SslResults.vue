@@ -13,11 +13,21 @@
         
         <div v-if="results.basicChecks.httpsAvailable" class="details">
           <div class="detail-item">
-            <strong>Connection:</strong>
+            <strong>SSL Certificate:</strong>
             <div class="sub-details">
-              <div>HTTP Version: {{ results.basicChecks.connection.httpVersion }}</div>
-              <div>TLS Version: {{ results.basicChecks.connection.clientTLS.version }}</div>
-              <div>TLS Cipher: {{ results.basicChecks.connection.clientTLS.cipher }}</div>
+              <div>Issuer: {{ results.basicChecks.certificate.issuer }}</div>
+              <div>Subject: {{ results.basicChecks.certificate.subject }}</div>
+              <div>Valid From: {{ new Date(results.basicChecks.certificate.notBefore).toLocaleString() }}</div>
+              <div>Valid Until: {{ new Date(results.basicChecks.certificate.notAfter).toLocaleString() }}</div>
+              <div>Serial Number: {{ results.basicChecks.certificate.serialNumber }}</div>
+            </div>
+          </div>
+
+          <div class="detail-item">
+            <strong>Certificate Status:</strong>
+            <div class="status-indicator" :class="isCertificateValid ? 'success' : 'error'">
+              <span class="icon">{{ isCertificateValid ? '✓' : '✗' }}</span>
+              <span>{{ certificateStatus }}</span>
             </div>
           </div>
 

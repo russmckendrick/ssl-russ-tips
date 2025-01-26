@@ -9,30 +9,28 @@ async function basicSslCheck(host, context) {
     // Get response headers
     const headers = Object.fromEntries(response.headers);
     
-    // Get Cloudflare info directly from the request context
-    const cf = context.request.cf;
+    // Get SSL certificate info using Cloudflare SSL/TLS Verification API
+    const sslVerify = await fetch(`https://ssl.${host}`, {
+      cf: {
+        // Request SSL/TLS certificate details
+        scrapeShield: false,
+        apps: false,
+        cacheEverything: false,
+        certificateInfo: true
+      }
+    });
     
+    const cert = sslVerify.cf?.certificate;
+
     const sslInfo = {
       protocol: 'HTTPS',
-      connection: {
-        httpVersion: cf.httpProtocol,
-        clientTLS: {
-          version: cf.tlsVersion,
-          cipher: cf.tlsCipher
-        }
-      },
-      serverLocation: {
-        datacenter: cf.colo,
-        country: cf.country,
-        city: cf.city,
-        region: cf.region,
-        continent: cf.continent,
-        latitude: cf.latitude,
-        longitude: cf.longitude
-      },
-      network: {
-        asn: cf.asn,
-        asOrganization: cf.asOrganization
+      certificate: {
+        issuer: cert?.issuer || 'Unknown',
+        subject: cert?.subject || 'Unknown',
+        notBefore: cert?.notBefore || 'Unknown',
+        notAfter: cert?.notAfter || 'Unknown',
+        fingerprint: cert?.fingerprint || 'Unknown',
+        serialNumber: cert?.serialNumber || 'Unknown'
       },
       security: {
         isHTTPS: true,
