@@ -53,7 +53,7 @@ import { ref } from 'vue'
 import UrlInput from './UrlInput.vue'
 import SslResults from './SslResults.vue'
 
-const WORKER_URL = 'https://your-worker.workers.dev' // Update this with your worker URL
+const WORKER_URL = 'https://ssl.russ.tips' // Updated to use your domain
 
 const loading = ref(false)
 const results = ref(null)
