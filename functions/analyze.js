@@ -1,36 +1,36 @@
 async function basicSslCheck(host, context) {
   try {
-    // Try HTTPS connection to verify it's available
+    // Make request to target host with SSL inspection enabled
     const response = await fetch(`https://${host}`, {
       method: 'HEAD',
-      headers: { 'User-Agent': 'SSL Checker (ssl.russ.tips)' }
-    });
-
-    // Get response headers
-    const headers = Object.fromEntries(response.headers);
-    
-    // Get SSL certificate info using Cloudflare SSL/TLS Verification API
-    const sslVerify = await fetch(`https://ssl.${host}`, {
+      headers: { 'User-Agent': 'SSL Checker (ssl.russ.tips)' },
       cf: {
-        // Request SSL/TLS certificate details
-        scrapeShield: false,
-        apps: false,
-        cacheEverything: false,
+        // Enable SSL certificate inspection
         certificateInfo: true
       }
     });
-    
-    const cert = sslVerify.cf?.certificate;
+
+    // Get response headers and certificate info
+    const headers = Object.fromEntries(response.headers);
+    const certInfo = response.cf?.certificate;
+
+    if (!certInfo) {
+      throw new Error('Could not retrieve SSL certificate information');
+    }
 
     const sslInfo = {
       protocol: 'HTTPS',
       certificate: {
-        issuer: cert?.issuer || 'Unknown',
-        subject: cert?.subject || 'Unknown',
-        notBefore: cert?.notBefore || 'Unknown',
-        notAfter: cert?.notAfter || 'Unknown',
-        fingerprint: cert?.fingerprint || 'Unknown',
-        serialNumber: cert?.serialNumber || 'Unknown'
+        issuer: certInfo.issuer,
+        subject: certInfo.subject,
+        notBefore: certInfo.notBefore,
+        notAfter: certInfo.notAfter,
+        fingerprint: certInfo.fingerprint,
+        serialNumber: certInfo.serialNumber,
+        keyUsage: certInfo.keyUsage,
+        altNames: certInfo.sans || [],
+        sigAlgorithm: certInfo.signatureAlgorithm,
+        version: certInfo.version
       },
       security: {
         isHTTPS: true,

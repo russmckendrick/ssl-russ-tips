@@ -19,7 +19,17 @@
               <div>Subject: {{ results.basicChecks.certificate.subject }}</div>
               <div>Valid From: {{ new Date(results.basicChecks.certificate.notBefore).toLocaleString() }}</div>
               <div>Valid Until: {{ new Date(results.basicChecks.certificate.notAfter).toLocaleString() }}</div>
-              <div>Serial Number: {{ results.basicChecks.certificate.serialNumber }}</div>
+              <div>Version: {{ results.basicChecks.certificate.version }}</div>
+              <div>Signature Algorithm: {{ results.basicChecks.certificate.sigAlgorithm }}</div>
+              <div>Key Usage: {{ results.basicChecks.certificate.keyUsage }}</div>
+              <div v-if="results.basicChecks.certificate.altNames.length">
+                <strong>Alternative Names:</strong>
+                <ul>
+                  <li v-for="name in results.basicChecks.certificate.altNames" :key="name">
+                    {{ name }}
+                  </li>
+                </ul>
+              </div>
             </div>
           </div>
 
