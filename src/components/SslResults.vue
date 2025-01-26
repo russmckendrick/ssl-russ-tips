@@ -25,8 +25,19 @@
             <strong>Server Location:</strong>
             <div class="sub-details">
               <div>Datacenter: {{ results.basicChecks.serverLocation.datacenter }}</div>
-              <div>Country: {{ results.basicChecks.serverLocation.country }}</div>
               <div>City: {{ results.basicChecks.serverLocation.city }}</div>
+              <div>Region: {{ results.basicChecks.serverLocation.region }}</div>
+              <div>Country: {{ results.basicChecks.serverLocation.country }}</div>
+              <div>Continent: {{ results.basicChecks.serverLocation.continent }}</div>
+              <div>Coordinates: {{ results.basicChecks.serverLocation.latitude }}, {{ results.basicChecks.serverLocation.longitude }}</div>
+            </div>
+          </div>
+
+          <div class="detail-item">
+            <strong>Network:</strong>
+            <div class="sub-details">
+              <div>ASN: {{ results.basicChecks.network.asn }}</div>
+              <div>Organization: {{ results.basicChecks.network.asOrganization }}</div>
             </div>
           </div>
 

@@ -1,6 +1,6 @@
-async function basicSslCheck(host) {
+async function basicSslCheck(host, context) {
   try {
-    // Try HTTPS connection
+    // Try HTTPS connection to verify it's available
     const response = await fetch(`https://${host}`, {
       method: 'HEAD',
       headers: { 'User-Agent': 'SSL Checker (ssl.russ.tips)' }
@@ -9,25 +9,30 @@ async function basicSslCheck(host) {
     // Get response headers
     const headers = Object.fromEntries(response.headers);
     
-    // Extract Cloudflare SSL/TLS info from the connection
-    const cfResponse = await response.cf;
+    // Get Cloudflare info directly from the request context
+    const cf = context.request.cf;
     
     const sslInfo = {
       protocol: 'HTTPS',
-      tlsVersion: cfResponse?.tlsVersion || headers['cf-tls-version'],
-      tlsCipher: cfResponse?.tlsCipher || headers['cf-tls-cipher'],
-      isCloudflareProtected: !!headers['cf-ray'],
-      serverLocation: {
-        datacenter: cfResponse?.colo || 'Unknown',
-        country: cfResponse?.country || 'Unknown',
-        city: cfResponse?.city || 'Unknown'
-      },
       connection: {
-        httpVersion: cfResponse?.httpProtocol || 'Unknown',
+        httpVersion: cf.httpProtocol,
         clientTLS: {
-          version: cfResponse?.tlsVersion || 'Unknown',
-          cipher: cfResponse?.tlsCipher || 'Unknown'
+          version: cf.tlsVersion,
+          cipher: cf.tlsCipher
         }
+      },
+      serverLocation: {
+        datacenter: cf.colo,
+        country: cf.country,
+        city: cf.city,
+        region: cf.region,
+        continent: cf.continent,
+        latitude: cf.latitude,
+        longitude: cf.longitude
+      },
+      network: {
+        asn: cf.asn,
+        asOrganization: cf.asOrganization
       },
       security: {
         isHTTPS: true,
@@ -40,7 +45,8 @@ async function basicSslCheck(host) {
           'Referrer-Policy': headers['referrer-policy'] || 'Not Set',
           'Permissions-Policy': headers['permissions-policy'] || 'Not Set'
         }
-      }
+      },
+      isCloudflareProtected: !!headers['cf-ray']
     };
 
     return {
@@ -48,12 +54,11 @@ async function basicSslCheck(host) {
       basicChecks: {
         httpsAvailable: true,
         ...sslInfo,
-        responseCode: response.status,
-        fullHeaders: headers
+        responseCode: response.status
       }
     };
   } catch (error) {
-    // Try HTTP as fallback to check if the site is available at all
+    // Try HTTP as fallback
     try {
       const httpResponse = await fetch(`http://${host}`, {
         method: 'HEAD',
@@ -84,7 +89,7 @@ async function basicSslCheck(host) {
   }
 }
 
-async function startSslLabsAnalysis(host) {
+async function startSslLabsAnalysis(host, context) {
   const response = await fetch(`https://api.ssllabs.com/api/v4/analyze?host=${encodeURIComponent(host)}&startNew=on`, {
     headers: {
       'email': context.env.SSLLABS_EMAIL
@@ -93,7 +98,7 @@ async function startSslLabsAnalysis(host) {
   return await response.json();
 }
 
-async function checkSslLabsProgress(host) {
+async function checkSslLabsProgress(host, context) {
   const response = await fetch(`https://api.ssllabs.com/api/v4/analyze?host=${encodeURIComponent(host)}`, {
     headers: {
       'email': context.env.SSLLABS_EMAIL
@@ -131,13 +136,13 @@ export async function onRequest(context) {
     let data;
     switch (action) {
       case 'basic':
-        data = await basicSslCheck(host);
+        data = await basicSslCheck(host, context);
         break;
       case 'start-full':
-        data = await startSslLabsAnalysis(host);
+        data = await startSslLabsAnalysis(host, context);
         break;
       case 'check-progress':
-        data = await checkSslLabsProgress(host);
+        data = await checkSslLabsProgress(host, context);
         break;
       default:
         throw new Error('Invalid action');
